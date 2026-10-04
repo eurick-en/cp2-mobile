@@ -1,0 +1,19 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "messages": {
+      "$conversationId": {
+        ".read": "auth != null",
+        ".indexOn": ["createdAt"],
+
+        "$messageId": {
+          ".write": "auth != null && !data.exists() && newData.child('senderId').val() === auth.uid && newData.child('conversationId').val() === $conversationId",
+
+          ".validate": "newData.hasChildren(['id', 'conversationId', 'conversationType', 'senderId', 'text', 'target', 'createdAt']) && newData.child('id').isString() && newData.child('conversationId').isString() && (newData.child('conversationType').val() === 'direct' || newData.child('conversationType').val() === 'group') && newData.child('senderId').isString() && newData.child('text').isString() && newData.child('text').val().length > 0 && newData.child('text').val().length <= 2000 && newData.child('createdAt').isNumber()"
+        }
+      }
+    }
+  }
+}

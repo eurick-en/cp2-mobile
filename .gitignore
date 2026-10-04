@@ -41,3 +41,37 @@ example
 # generated native folders
 /ios
 /android
+
+firebase-fcm-service-account.json
+
+# Dependencies
+node_modules/
+server/node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+
+# Environment
+.env
+.env.*
+!.env.example
+server/.env
+
+# Firebase / service account secrets
+*firebase-adminsdk*.json
+firebase-fcm-service-account.json
+*service-account*.json
+serviceAccountKey.json
+firebaseAdminCredentials.json
+*.pem
+
+# Server build
+server/dist/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

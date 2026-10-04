@@ -7,10 +7,15 @@
     "icon": "./assets/images/icon.png",
     "scheme": "firebasechat",
     "userInterfaceStyle": "automatic",
+
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "bundleIdentifier": "com.henriquesanches.firebasechat"
     },
+
     "android": {
+      "package": "com.henriquesanches.firebasechat",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -19,12 +24,21 @@
       },
       "predictiveBackGestureEnabled": false
     },
+
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
+
     "plugins": [
       "expo-router",
+      [
+        "expo-notifications",
+        {
+          "color": "#208AEF",
+          "defaultChannel": "default"
+        }
+      ],
       [
         "expo-splash-screen",
         {
@@ -34,9 +48,19 @@
         }
       ]
     ],
+
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "bdc5d788-8112-481f-abf3-c42d9f529a1b"
+      }
+    },
+
+    "owner": "eurick_en"
   }
 }

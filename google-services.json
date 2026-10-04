@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "508288926938",
+    "firebase_url": "https://cp2-mobile-d30b6-default-rtdb.firebaseio.com",
+    "project_id": "cp2-mobile-d30b6",
+    "storage_bucket": "cp2-mobile-d30b6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:508288926938:android:02cd4d7a4f85fd62ee91e3",
+        "android_client_info": {
+          "package_name": "com.henriquesanches.firebasechat"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC9JWYquh8LTpDPHA3mzBI70FsHgkm1Gkg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
