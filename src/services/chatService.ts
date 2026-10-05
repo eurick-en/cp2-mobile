@@ -38,6 +38,10 @@ import {
   getGroupById,
 } from '@/services/groupService';
 
+import {
+  requestMessagePush,
+} from '@/services/notificationApiService';
+
 function isMessageTarget(
   value: unknown
 ): value is MessageTarget {
@@ -49,17 +53,22 @@ function isMessageTarget(
   }
 
   const target =
-    value as Record<string, unknown>;
+    value as Record<
+      string,
+      unknown
+    >;
 
   if (
-    target.type === 'conversation'
+    target.type ===
+    'conversation'
   ) {
     return true;
   }
 
   return (
     target.type === 'member' &&
-    typeof target.memberId === 'string'
+    typeof target.memberId ===
+      'string'
   );
 }
 
@@ -74,31 +83,44 @@ function isChatMessage(
   }
 
   const data =
-    value as Record<string, unknown>;
+    value as Record<
+      string,
+      unknown
+    >;
 
   const validMentionedUsers =
-    data.mentionedUserIds === undefined ||
-    data.mentionedUserIds === null ||
+    data.mentionedUserIds ===
+      undefined ||
+    data.mentionedUserIds ===
+      null ||
     (
       Array.isArray(
         data.mentionedUserIds
       ) &&
       data.mentionedUserIds.every(
         (userId) =>
-          typeof userId === 'string'
+          typeof userId ===
+          'string'
       )
     );
 
   return (
-    typeof data.id === 'string' &&
-    typeof data.conversationId === 'string' &&
+    typeof data.id ===
+      'string' &&
+    typeof data.conversationId ===
+      'string' &&
     (
-      data.conversationType === 'direct' ||
-      data.conversationType === 'group'
+      data.conversationType ===
+        'direct' ||
+      data.conversationType ===
+        'group'
     ) &&
-    typeof data.senderId === 'string' &&
-    typeof data.text === 'string' &&
-    typeof data.createdAt === 'number' &&
+    typeof data.senderId ===
+      'string' &&
+    typeof data.text ===
+      'string' &&
+    typeof data.createdAt ===
+      'number' &&
     isMessageTarget(
       data.target
     ) &&
@@ -117,12 +139,17 @@ function isDirectConversation(
   }
 
   const data =
-    value as Record<string, unknown>;
+    value as Record<
+      string,
+      unknown
+    >;
 
   if (
-    typeof data.id !== 'string' ||
+    typeof data.id !==
+      'string' ||
     data.type !== 'direct' ||
-    typeof data.createdAt !== 'number' ||
+    typeof data.createdAt !==
+      'number' ||
     !Array.isArray(
       data.participantIds
     )
@@ -131,14 +158,18 @@ function isDirectConversation(
   }
 
   if (
-    data.participantIds.length !== 2
+    data.participantIds
+      .length !== 2
   ) {
     return false;
   }
 
-  return data.participantIds.every(
-    (participantId) =>
-      typeof participantId === 'string'
+  return (
+    data.participantIds.every(
+      (participantId) =>
+        typeof participantId ===
+        'string'
+    )
   );
 }
 
@@ -147,7 +178,8 @@ export async function getOrCreateDirectConversation(
   otherUserId: string
 ): Promise<DirectConversation> {
   if (
-    currentUserId === otherUserId
+    currentUserId ===
+    otherUserId
   ) {
     throw new Error(
       'Você não pode iniciar uma conversa consigo mesmo.'
@@ -179,7 +211,9 @@ export async function getOrCreateDirectConversation(
       existingConversation.data();
 
     if (
-      !isDirectConversation(data)
+      !isDirectConversation(
+        data
+      )
     ) {
       throw new Error(
         'Dados da conversa são inválidos.'
@@ -205,7 +239,8 @@ export async function getOrCreateDirectConversation(
       id: conversationId,
       type: 'direct',
       participantIds,
-      createdAt: Date.now(),
+      createdAt:
+        Date.now(),
     };
 
   await setDoc(
@@ -218,7 +253,9 @@ export async function getOrCreateDirectConversation(
 
 export async function getDirectConversation(
   conversationId: string
-): Promise<DirectConversation | null> {
+): Promise<
+  DirectConversation | null
+> {
   const conversationReference =
     doc(
       firestore,
@@ -239,7 +276,9 @@ export async function getDirectConversation(
     snapshot.data();
 
   if (
-    !isDirectConversation(data)
+    !isDirectConversation(
+      data
+    )
   ) {
     throw new Error(
       'Dados da conversa são inválidos.'
@@ -251,7 +290,9 @@ export async function getDirectConversation(
 
 export async function getDirectConversationsForUser(
   userId: string
-): Promise<DirectConversation[]> {
+): Promise<
+  DirectConversation[]
+> {
   const conversationsReference =
     collection(
       firestore,
@@ -277,12 +318,16 @@ export async function getDirectConversationsForUser(
     DirectConversation[] = [];
 
   snapshot.forEach(
-    (documentSnapshot) => {
+    (
+      documentSnapshot
+    ) => {
       const data: unknown =
         documentSnapshot.data();
 
       if (
-        isDirectConversation(data)
+        isDirectConversation(
+          data
+        )
       ) {
         conversations.push(
           data
@@ -292,7 +337,10 @@ export async function getDirectConversationsForUser(
   );
 
   conversations.sort(
-    (first, second) =>
+    (
+      first,
+      second
+    ) =>
       second.createdAt -
       first.createdAt
   );
@@ -337,6 +385,34 @@ async function persistMessage(
   return completeMessage;
 }
 
+async function persistMessageAndRequestPush(
+  message: ChatMessage
+): Promise<ChatMessage> {
+  const persistedMessage =
+    await persistMessage(
+      message
+    );
+
+  try {
+    await requestMessagePush(
+      persistedMessage
+        .conversationId,
+      persistedMessage.id
+    );
+
+    console.log(
+      '✅ Solicitação de push enviada para a API.'
+    );
+  } catch (error) {
+    console.error(
+      '⚠️ A mensagem foi salva, mas houve falha ao solicitar o push:',
+      error
+    );
+  }
+
+  return persistedMessage;
+}
+
 export async function sendDirectMessage(
   conversationId: string,
   senderId: string,
@@ -352,7 +428,8 @@ export async function sendDirectMessage(
   }
 
   if (
-    normalizedText.length > 2000
+    normalizedText.length >
+    2000
   ) {
     throw new Error(
       'A mensagem não pode ultrapassar 2000 caracteres.'
@@ -371,38 +448,46 @@ export async function sendDirectMessage(
   }
 
   if (
-    !conversation.participantIds.includes(
-      senderId
-    )
+    !conversation
+      .participantIds
+      .includes(
+        senderId
+      )
   ) {
     throw new Error(
       'Você não participa desta conversa.'
     );
   }
 
-  return persistMessage({
-    id: '',
-    conversationId,
-    conversationType:
-      'direct',
-    senderId,
-    text:
-      normalizedText,
-    target: {
-      type:
-        'conversation',
-    },
-    mentionedUserIds: [],
-    createdAt:
-      Date.now(),
-  });
+  return (
+    persistMessageAndRequestPush(
+      {
+        id: '',
+        conversationId,
+        conversationType:
+          'direct',
+        senderId,
+        text:
+          normalizedText,
+        target: {
+          type:
+            'conversation',
+        },
+        mentionedUserIds:
+          [],
+        createdAt:
+          Date.now(),
+      }
+    )
+  );
 }
 
 export async function sendGroupMessage(
   groupId: string,
   senderId: string,
   text: string,
-  targetMemberId?: string | null
+  targetMemberId?:
+    string | null
 ): Promise<ChatMessage> {
   const normalizedText =
     text.trim();
@@ -414,7 +499,8 @@ export async function sendGroupMessage(
   }
 
   if (
-    normalizedText.length > 2000
+    normalizedText.length >
+    2000
   ) {
     throw new Error(
       'A mensagem não pode ultrapassar 2000 caracteres.'
@@ -462,9 +548,10 @@ export async function sendGroupMessage(
     }
 
     if (
-      !group.memberIds.includes(
-        targetMemberId
-      )
+      !group.memberIds
+        .includes(
+          targetMemberId
+        )
     ) {
       throw new Error(
         'O destinatário não pertence ao grupo.'
@@ -482,25 +569,31 @@ export async function sendGroupMessage(
     ];
   }
 
-  return persistMessage({
-    id: '',
-    conversationId:
-      groupId,
-    conversationType:
-      'group',
-    senderId,
-    text:
-      normalizedText,
-    target,
-    mentionedUserIds,
-    createdAt:
-      Date.now(),
-  });
+  return (
+    persistMessageAndRequestPush(
+      {
+        id: '',
+        conversationId:
+          groupId,
+        conversationType:
+          'group',
+        senderId,
+        text:
+          normalizedText,
+        target,
+        mentionedUserIds,
+        createdAt:
+          Date.now(),
+      }
+    )
+  );
 }
 
 export async function getLastMessage(
   conversationId: string
-): Promise<ChatMessage | null> {
+): Promise<
+  ChatMessage | null
+> {
   const messagesReference =
     query(
       ref(
@@ -518,30 +611,35 @@ export async function getLastMessage(
       messagesReference
     );
 
-  if (
-    !snapshot.exists()
-  ) {
+  if (!snapshot.exists()) {
     return null;
   }
 
   let lastMessage:
-    ChatMessage | null = null;
+    ChatMessage | null =
+      null;
 
   snapshot.forEach(
-    (childSnapshot) => {
+    (
+      childSnapshot
+    ) => {
       const value: unknown =
         childSnapshot.val();
 
       if (
-        isChatMessage(value)
+        isChatMessage(
+          value
+        )
       ) {
         lastMessage = {
           ...value,
           mentionedUserIds:
             Array.isArray(
-              value.mentionedUserIds
+              value
+                .mentionedUserIds
             )
-              ? value.mentionedUserIds
+              ? value
+                  .mentionedUserIds
               : [],
         };
       }
@@ -554,7 +652,8 @@ export async function getLastMessage(
 export function subscribeToMessages(
   conversationId: string,
   onMessages: (
-    messages: ChatMessage[]
+    messages:
+      ChatMessage[]
   ) => void,
   onError: (
     error: Error
@@ -584,7 +683,8 @@ export function subscribeToMessages(
           ) => {
             const value:
               unknown =
-                childSnapshot.val();
+                childSnapshot
+                  .val();
 
             if (
               isChatMessage(
